@@ -5,7 +5,7 @@ import random
 import matplotlib.pyplot as plt
 
 
-#Problem: 
+#Problem:  (intial 5 episodes are given, and then randomly generate future episodes)
 graph = {1:[2],2:[3,4],3:[1,2,3,4],4:[]}
 arcs = {(1,2):-2,(2,3):-2,(2,4):0,(3,1):1,(3,2):1,(3,3):1,(3,4):10}
 
