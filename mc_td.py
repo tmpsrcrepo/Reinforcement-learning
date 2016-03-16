@@ -5,12 +5,20 @@ import random
 import matplotlib.pyplot as plt
 import collections
 
-#Note: gamma = 1 for everything
+'''
+Note: gamma = 1 for everything
+Brief intro: compare MC-constant-alpha(), MC-mean(), TD(0), forwardTD(lambda) and backwardTD(lambda)
+Theoretical expectation: MC-const-alpha()==forwardTD(1)==backwardTD(1), TD(0)==forwardTD(0)==backwardTD(0) 
+Results: proved the theoretical expectations (however backwardTD() might be slightly different based on how you implement 
+eligibility trace)
 
+'''
+
+gamma = 1
 
 graph = {1:[2],2:[3,4],3:[1,2,3,4],4:[]}
 arcs = {(1,2):-2,(2,3):-2,(2,4):0,(3,1):1,(3,2):1,(3,3):1,(3,4):10}
-#transition probability
+#transitive distribution
 pdf = {1:[1],2:[0.8,1],3:[0.08,0.24,0.4,1],4:[]}
 #P(3|3)=0.4, P(2|3)=0.4,P(1|3)=0.2
 
@@ -38,12 +46,12 @@ E1 = [(1,-2),(2,0),(4,0)]
 E2 = [(1,-2),(2,0),(4,0)]
 E3 = [(1,-2),(2,-2),(3,1),(3,10),(4,0)]
 E4 = [(1,-2),(2,-2),(3,10),(4,0)]
-E5 = [(1,-2),(2,0),(4,0)]
-E6 = [(1,-2),(2,-2),(3,1),(1,-2),(2,-2),(3,10),(4,0)]
+#E5 = [(1,-2),(2,0),(4,0)]
+E5 = [(1,-2),(2,-2),(3,1),(1,-2),(2,-2),(3,10),(4,0)]
 
 
 #online update
-#episodes = [E1,E2,E3,E4,E5,E6]
+
 def MC(index,epi,values,counts):
     #calculate total sum from the begining
     G = sum(map(lambda x:x[1],epi))
@@ -77,14 +85,20 @@ def TD_0(index,epi,values,a):
 #forward_TD
 def TD_lambda(index,epi,values,lambda_,a):
     rewards = map(lambda x:x[1],epi)
-    returns = np.zeros(4)
+    G_total= sum(rewards)
+    T = len(rewards)
     for i,e in enumerate(epi[:-1]):
         #sum of returns
         state = e[0]-1
-        return_tmp  = 0
-        for d in xrange(i+1,len(rewards)):
-            return_tmp+=(lambda_**(d-i-1))*sum(rewards[i:d])
-        values[state]+=a*((1-lambda_)*return_tmp-values[state])
+        r = e[1]
+        G= 0
+        for d in xrange(1,T-i):
+            G+=(lambda_**(d-1))*(sum(rewards[i:i+d])+values[epi[i+d][0]-1])
+
+        G =G*(1-lambda_)+G_total*lambda_**(T-i-1)
+        values[state]+=a*(G-values[state])
+        G_total-=r
+
     return [v for k,v in values.items()]
 
 
@@ -93,18 +107,16 @@ def TD_back_lambda(index,epi,values,lambda_,a):
     #values[index] = [i for i in values[index-1]]
     etrace = np.zeros(4)
     trace = []
+    lambda_val = 1
     #for each state in one episode
     for i,e in enumerate(epi[:-1]):
         state = e[0]-1
         r = e[1]
         next_state = epi[i+1][0]-1
         error = r+values[next_state]-values[state]
-        if lambda_!=1:
-            etrace[state]+=1
-        else:
-            etrace[state]=1
+        etrace[state]=1
 
-        #values[state]+= a*error*etrace[state]
+        #for each state
         for s in xrange(4):
             values[s]+= a*error*etrace[s]
             etrace[s]*=lambda_
@@ -113,12 +125,14 @@ def TD_back_lambda(index,epi,values,lambda_,a):
     return [v for k,v in values.items()]
 
 
-numepisodes=94
-episodes=[E1,E2,E3,E4,E5,E6]+generateEpisodes(numepisodes,graph,arcs)
+
+episodes = [E1,E2,E3,E4,E5]
+episodes+=generateEpisodes(95,graph,arcs)
+numepisodes=len(episodes)
 
 def plot_function(df,numepisodes,title_):
     
-    title_ +='_episodes '+str(6+numepisodes)
+    title_ +='_episodes '+str(numepisodes)
     plot = df.plot(title=title_)
     plot.set_xlabel('episodes')
     plot.set_ylabel('values')
@@ -156,6 +170,7 @@ def run_MC_nonstationary(a):
         value_matrix.append(MC_nonstationary(index,epi,values,a))
     df = pd.DataFrame(value_matrix, columns=list('1234'))
     print df
+    print 'MC_nonstationary'
     plot_function(df,numepisodes,'MC_nonstationary')
 
 run_MC_nonstationary(0.5)
@@ -171,7 +186,8 @@ def run_TD(a):
         value_matrix.append(TD_0(index,epi,values,a))
 
     df = pd.DataFrame(value_matrix, columns=list('1234'))
-    #print df
+    print "TD 0"
+    print df
     #plot
     plot_function(df,numepisodes,'TD(0)')
 
@@ -188,12 +204,14 @@ def forward_run_TD_lambda(lambda_,a):
         value_matrix.append(TD_lambda(index,epi,values,lambda_,a))
     
     df = pd.DataFrame(value_matrix, columns=list('1234'))
+    print "forward TD",lambda_
     print lambda_,df
     #plot
     plot_function(df,numepisodes,'forward_TD'+'('+str(lambda_)+')')
 
+forward_run_TD_lambda(0,0.5)
 forward_run_TD_lambda(0.5,0.5)
-
+forward_run_TD_lambda(1,0.5)
 
 def backward_run_TD_lambda(lambda_,a):
     
@@ -205,11 +223,11 @@ def backward_run_TD_lambda(lambda_,a):
         value_matrix.append(TD_back_lambda(index,epi,values,lambda_,a))
         #TD_lambda(index,epi,values,lambda_,a)
     df = pd.DataFrame(value_matrix, columns=list('1234'))
+    print "backward TD",lambda_
     print df
     #plot
     plot_function(df,numepisodes,'backward_TD'+'('+str(lambda_)+')')
 
-
-backward_run_TD_lambda(1,0.5)
+backward_run_TD_lambda(0,0.5)
 backward_run_TD_lambda(0.5,0.5)
-
+backward_run_TD_lambda(1,0.5)
