@@ -11,8 +11,7 @@ Brief intro: compare MC-constant-alpha(), MC-mean(), TD(0), forwardTD(lambda) an
 Theoretical expectation: MC-const-alpha()==forwardTD(1)==backwardTD(1), TD(0)==forwardTD(0)==backwardTD(0) 
 Results: proved the theoretical expectations (however backwardTD() might be slightly different based on how you implement 
 eligibility trace)
-Also, if you change constant alpha into 1/T^2 or 1/T, the values will converge. Otherwise you will observe a cyclic pattern
-
+Also, if you change constant alpha into k/T (total number of iterations), the values will converge. If a (learning rate) is too large, such as 0.5, the values wont converge.
 '''
 
 gamma = 1
