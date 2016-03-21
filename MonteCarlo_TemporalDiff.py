@@ -129,6 +129,8 @@ def TD_back_lambda(index,epi,values,lambda_,a):
 episodes = [E1,E2,E3,E4,E5]
 episodes+=generateEpisodes(95,graph,arcs)
 numepisodes=len(episodes)
+#learning rate
+a = 1.0/numepisodes
 
 def plot_function(df,numepisodes,title_):
     
@@ -173,7 +175,7 @@ def run_MC_nonstationary(a):
     print 'MC_nonstationary'
     plot_function(df,numepisodes,'MC_nonstationary')
 
-run_MC_nonstationary(0.5)
+run_MC_nonstationary(a)
 
 
 
@@ -191,7 +193,7 @@ def run_TD(a):
     #plot
     plot_function(df,numepisodes,'TD(0)')
 
-run_TD(0.5)
+run_TD(a)
 
 
 
@@ -209,9 +211,9 @@ def forward_run_TD_lambda(lambda_,a):
     #plot
     plot_function(df,numepisodes,'forward_TD'+'('+str(lambda_)+')')
 
-forward_run_TD_lambda(0,0.5)
-forward_run_TD_lambda(0.5,0.5)
-forward_run_TD_lambda(1,0.5)
+forward_run_TD_lambda(0,a)
+forward_run_TD_lambda(0.5,a)
+forward_run_TD_lambda(1,a)
 
 def backward_run_TD_lambda(lambda_,a):
     
@@ -228,6 +230,6 @@ def backward_run_TD_lambda(lambda_,a):
     #plot
     plot_function(df,numepisodes,'backward_TD'+'('+str(lambda_)+')')
 
-backward_run_TD_lambda(0,0.5)
-backward_run_TD_lambda(0.5,0.5)
-backward_run_TD_lambda(1,0.5)
+backward_run_TD_lambda(0,a)
+backward_run_TD_lambda(0.5,a)
+backward_run_TD_lambda(1,a)
