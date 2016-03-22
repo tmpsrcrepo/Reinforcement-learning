@@ -2,7 +2,6 @@
  * homework assignments and some algorithms associated with my reinforcement learning class
 
 
-## Completed:
 1. Monte-carlo, temporal difference:
  * MC-nonstationary
  * MC-incremental
@@ -13,6 +12,7 @@
 2. Sarsa (state-action-reward-state-action), Q-learning:
  (on Windy Gridworld with and w/o King’s Moves respectively)
  * Sarsa (done)
-## In progress:
+
+ In progress:
  * Q-learning
  * off-policy TD
