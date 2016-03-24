@@ -12,7 +12,7 @@
 2. Sarsa (state-action-reward-state-action), Q-learning:
  (on Windy Gridworld with and w/o King’s Moves respectively)
  * Sarsa (done)
+ * Q-learning
 
  In progress:
- * Q-learning
  * off-policy TD
