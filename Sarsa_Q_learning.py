@@ -12,7 +12,7 @@ nrow = 7
 start = [3,0]
 end = [3,7]
 #initialize parameter
-episilon = 0.1
+#episilon = 0.1
 
 
 def createEmptyCanvas():
@@ -44,12 +44,12 @@ def findBestAction(i,j,actionSpace,Qvals,wind_):
         
         candidates+=[Qvals[out]]
         candidates_pairs+=[[out[0],out[1]]]
-    #candidates = [ for k,(i_tmp,j_tmp) in (actionSpace.items())]
     #greedy move
     index_opt = np.argmax(candidates)+1
+
     return max(candidates),index_opt,candidates_pairs
 
-def epsilon_greedy(i,j,Qvals,actionSpace,wind_):
+def epsilon_greedy(i,j,Qvals,actionSpace,wind_,episilon):
     nActions = len(actionSpace)
     cdf = [0]*(nActions+1)
     
@@ -62,8 +62,19 @@ def epsilon_greedy(i,j,Qvals,actionSpace,wind_):
             cdf[index] = cdf[index-1]+episilon*1.0/nActions
     #make selection
     random_ = random.uniform(0,1)
+    
     nex = bisect.bisect_left(cdf,random_)
     return nex,candidates_pairs
+
+def uniform_policy(i,j,Qvals,actionSpace,wind_):
+    nActions = len(actionSpace)
+    cdf = [0]*(nActions+1)
+    
+    _,index_opt,candidates_pairs = findBestAction(i,j,actionSpace,Qvals,wind_)
+    #make selection
+    nex = random.sample(actionSpace.keys(),1)[0]
+    return nex,candidates_pairs
+
 
 def plot_function(res,n_episodes,title_):
     title_ +='_episodes '+str(n_episodes)
@@ -78,7 +89,7 @@ def plot_function(res,n_episodes,title_):
 
 
 #SARSA
-def Sarsa(n_episodes,alpha,nActions,actionSpace):
+def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon):
     sVals = createEmptyCanvas() #state values
     a_optimals = createEmptyCanvas()
     Qvals = initializeQ(nActions)
@@ -86,19 +97,20 @@ def Sarsa(n_episodes,alpha,nActions,actionSpace):
     res = [0] #episode index, #total number of steps to reach from
     i,j = start
     g_i,g_j = end
+    print 'SARSA'
     #choose A
     for epi in xrange(n_episodes):
         a_optimals = createEmptyCanvas()
         nsteps = 0
         i,j = start
-        a,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j])
+        a,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j],episilon)
         while i!=g_i or j!= g_j:
             #take the action
             a_optimals[i][j] = a
             a_i,a_j = candidates[a-1]
             
             #find the next move
-            a_next,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j])
+            a_next,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j],episilon)
             next_i,next_j =candidates[a_next-1]
             #update Qvals
             val = Qvals[(i,j,a)]
@@ -120,12 +132,12 @@ def Sarsa(n_episodes,alpha,nActions,actionSpace):
 
 
 #Q-learning
-def q_learning(n_episodes,alpha,nActions,actionSpace):
+def q_learning(n_episodes,alpha,nActions,actionSpace,episilon):
     sVals = createEmptyCanvas() #state values
     #final_a_optimals = None
     #min_steps = None
     Qvals = initializeQ(nActions)
-    
+    print 'Q-learning'
     res = [0] #episode index, #total number of steps to reach from
     i,j = start
     g_i,g_j = end
@@ -134,17 +146,57 @@ def q_learning(n_episodes,alpha,nActions,actionSpace):
         a_optimals = createEmptyCanvas()
         nsteps = 0
         i,j = start
+        #for each step of episode
+        while i!=g_i or j!= g_j:
+            #find the next move a from current position (episilon-greedy
+            A,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j],episilon)
+            
+            #record the current action
+            a_optimals[i][j] = A
+            #take action
+            next_i,next_j = candidates[A-1]
+            #get Q(s,a)
+            val = Qvals[(i,j,A)]
+            #find the best action from the next position
+            Q_next,_,_ = findBestAction(next_i,next_j,actionSpace,Qvals,wind_strengths[next_j])
+
+            Qvals[(i,j,A)] = val + alpha*(-1+Q_next-val)
+            #update moves
+            i,j =next_i,next_j
+            nsteps+=1
+        
+        res.append(nsteps+res[-1])
+    
+    plot_function(res,n_episodes,'Q_Learning_'+str(nActions)+'_episilon_'+str(episilon))
+    
+    for i, row in enumerate(a_optimals):
+        print (row)
+
+
+def q_learning_uniform(n_episodes,alpha,nActions,actionSpace):
+    sVals = createEmptyCanvas() #state values
+    #final_a_optimals = None
+    #min_steps = None
+    Qvals = initializeQ(nActions)
+    res = [0] #episode index, #total number of steps to reach from
+    i,j = start
+    g_i,g_j = end
+    print 'offline TD-uniform plicy'
+    #choose A
+    for epi in xrange(n_episodes):
+        a_optimals = createEmptyCanvas()
+        nsteps = 0
+        i,j = start
         
         while i!=g_i or j!= g_j:
             #find the next move
-            a,candidates = epsilon_greedy(i,j,Qvals,actionSpace,wind_strengths[j])
+            a,candidates = uniform_policy(i,j,Qvals,actionSpace,wind_strengths[j])
             a_optimals[i][j] = a
             next_i,next_j = candidates[a-1]
             #update Qvals
             val = Qvals[(i,j,a)]
             #choosing the best action
             Q_next,_,_ = findBestAction(next_i,next_j,actionSpace,Qvals,wind_strengths[next_j])
-
             
             Qvals[(i,j,a)] = val + alpha*(-1+Q_next-val)
             #update moves
@@ -153,12 +205,10 @@ def q_learning(n_episodes,alpha,nActions,actionSpace):
         
         res.append(nsteps+res[-1])
     
-    plot_function(res,n_episodes,'Q_Learning_'+str(nActions))
+    plot_function(res,n_episodes,'Q_Learning_'+str(nActions)+'uniform')
     
     for i, row in enumerate(a_optimals):
         print (row)
-
-
 
 def main():
     '''initialization of wind gridworld
@@ -169,6 +219,9 @@ def main():
     gridworld = [wind_strengths for i in xrange(nrow)]
     actionSpace = {1:(0,-1),2:(-1,0),3:(0,1),4:(1,0)}
     nActions = 4
+    
+    n_episodes = 170
+    alpha = 0.5
 
     #undiscounted, gamma = 1
     #reward = -1 unless it reaches the goal
@@ -177,20 +230,28 @@ def main():
     # graph: episodes vs steps
     # final policy representation
     '''task a: results of sarsa & q-learning'''
-    Sarsa(170,0.5,nActions,actionSpace)
+    episilon = 0.1
+    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon)
     print
-    q_learning(170,0.5,nActions,actionSpace)
+    q_learning(n_episodes,alpha,nActions,actionSpace,episilon)
+    print
+    '''Part 2''
+        '' do off-policy TD learning using uniform policy on non-king's move'''
+    print 'uniform policy'
+    q_learning_uniform(n_episodes,alpha,nActions,actionSpace)
     print
     
     '''task b: king's moves are available'''
     actionSpace = {1:(0,-1),2:(-1,-1),3:(-1,0),4:(-1,1),5:(0,1),6:(1,1),7:(1,0),8:(1,-1)}
     nActions = 8
-    Sarsa(170,0.5,nActions,actionSpace)
+    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon)
     print
-    q_learning(170,0.5,nActions,actionSpace)
+    q_learning(n_episodes,alpha,nActions,actionSpace,episilon)
     
-    '''Part 2''
-    '' do off-policy TD learning using uniform policy on non-king's move'''
+
+
+    
+
 
 
 if __name__ == '__main__':
