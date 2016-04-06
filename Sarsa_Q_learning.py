@@ -253,8 +253,8 @@ def main():
     print
     '''Part 2''
         '' do off-policy TD learning using uniform policy on non-king's move'''
-    print 'uniform policy'
-    #q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon)
+    print 'uniform policy' #this algorithm is extremely slow cuz it assigns the same prob to each action
+    q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon)
     print
     
     '''task b: king's moves are available'''
