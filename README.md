@@ -10,9 +10,7 @@
  * TD-backward(0.5)
 
 2. Sarsa (state-action-reward-state-action), Q-learning:
- (on Windy Gridworld with and w/o King’s Moves respectively)
+ (on Windy Gridworld with and w/o King’s Moves respectively, Reinforcement Learning textbook)
  * Sarsa (done)
  * Q-learning
-
- In progress:
- * off-policy TD
+ 
