@@ -5,29 +5,6 @@ from scipy import optimize
 
 #Evaluation metrics: cumulative precision and cumulative recall
 
-class linear_epsilon_arm(object):
-    def __init__(self,arm,d,lambda_,alpha):
-        self.d = d
-        self.arm = arm
-        self.A = lambda_*np.diag(np.ones(d))
-        self.A_inv = inv(self.A)
-        self.b = np.zeros(d)
-        self.theta = np.zeros(d)
-        self.alpha = alpha
-    
-    def updateTheta(self):
-        self.theta = np.dot(self.A_inv,self.b)
-
-    def updateA(self,featureVec):
-        
-        #featureVec  = np.transpose(featureVec)
-
-        self.A = self.A + np.outer(featureVec,featureVec)
-        
-        self.A_inv = inv(self.A)
-    
-    def updateb(self,featureVec,reward):
-        self.b = self.b + reward*featureVec
 
 class linucb_arm(object):
     def __init__(self,d,lambda_,alpha):
@@ -71,7 +48,7 @@ class linucb(object):
     
     def recommend(self):
         max_p = 0
-        max_arm = -1
+        max_arm = self.arm_list.keys()[0]
         for arm,arm_obj in self.arm_list.items():
             if arm_obj.p>max_p:
                 max_p = arm_obj.p
