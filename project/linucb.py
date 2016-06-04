@@ -4,7 +4,7 @@ from numpy.linalg import inv
 from scipy import optimize
 
 #Evaluation metrics: cumulative precision and cumulative recall
-
+#computational complexity is linear in the number of arms and at most cubic in the number of features. 
 
 class linucb_arm(object):
     def __init__(self,d,lambda_,alpha):
