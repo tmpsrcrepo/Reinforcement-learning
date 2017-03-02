@@ -11,6 +11,8 @@ ncol = len(wind_strengths)
 nrow = 7
 start = [3,0]
 end = [3,7]
+gamma = 0
+#reward is always -1
 #initialize parameter
 #episilon = 0.1
 
@@ -63,6 +65,10 @@ def epsilon_greedy(i,j,Qvals,actionSpace,episilon):
     nex = bisect.bisect_left(cdf,random_)
     return nex,candidates_pair
 
+# TODO: brute-force version, it doesn't seem reasonable to have O(n) + O(lgn) instead of O(n) only, we'll see
+#def epsilon_greedy_brute_force(i,j,Qvals,actionSpace,episilon):
+
+
 def uniform_policy(i,j,Qvals,actionSpace):
     #make selection
     nex = random.sample(actionSpace.keys(),1)[0]
@@ -85,7 +91,7 @@ def plot_function(res,n_episodes,title_):
 
 
 #SARSA
-def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon):
+def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
     sVals = createEmptyCanvas() #state values
     a_optimals = createEmptyCanvas()
     Qvals = initializeQ(nActions)
@@ -112,7 +118,7 @@ def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon):
             #update Qvals
             val = Qvals[(i,j,a)]
             
-            Qvals[(i,j,a)] =val + alpha*(-1+Qvals[(a_i,a_j,a_next)]-val)
+            Qvals[(i,j,a)] =val + alpha*(-1+gamma*Qvals[(a_i,a_j,a_next)]-val)
             #update moves
             i,j =a_i,a_j
             a = a_next
@@ -120,7 +126,7 @@ def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon):
         
         res.append(nsteps+res[-1])
     
-    plot_function(res,n_episodes,'SARSA_'+str(nActions))
+    plot_function(res,n_episodes,'SARSA_'+str(nActions)+'_episilon_'+str(episilon)+'_gamma_'+str(gamma))
 
     for i, row in enumerate(a_optimals):
         print (row)
@@ -129,7 +135,7 @@ def Sarsa(n_episodes,alpha,nActions,actionSpace,episilon):
 
 
 #Q-learning
-def q_learning(n_episodes,alpha,nActions,actionSpace,episilon):
+def q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
     sVals = createEmptyCanvas() #state values
     #final_a_optimals = None
     #min_steps = None
@@ -162,7 +168,7 @@ def q_learning(n_episodes,alpha,nActions,actionSpace,episilon):
             #find the best action from the next position
             Q_next,index_,candidate = findBestAction(next_i,next_j,actionSpace,Qvals)
             
-            Qvals[(i,j,A)] = val + alpha*(-1+Q_next-val)
+            Qvals[(i,j,A)] = val + alpha*(-1+gamma*Q_next-val)
             #update moves
             
             i,j =next_i,next_j
@@ -171,14 +177,14 @@ def q_learning(n_episodes,alpha,nActions,actionSpace,episilon):
         #last+=nsteps
         res.append(last)
     
-    plot_function(res,n_episodes,'Q_Learning_'+str(nActions)+'_episilon_'+str(episilon))
+    plot_function(res,n_episodes,'Q_Learning_'+str(nActions)+'_episilon_'+str(episilon)+'_gamma_'+str(gamma))
     
     for i, row in enumerate(a_optimals):
         print (row)
 
 
 
-def q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon):
+def q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
     sVals = createEmptyCanvas() #state values
     #final_a_optimals = None
     #min_steps = None
@@ -212,7 +218,7 @@ def q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon):
             #find the best action from the next position
             Q_next,index_,candidate = findBestAction(next_i,next_j,actionSpace,Qvals)
             
-            Qvals[(i,j,A)] = val + alpha*(-1+Q_next-val)
+            Qvals[(i,j,A)] = val + alpha*(-1+gamma*Q_next-val)
             #update moves
             
             i,j =next_i,next_j
@@ -221,7 +227,7 @@ def q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon):
         #last+=nsteps
         res.append(last)
     
-    plot_function(res,n_episodes,'Q_Learning_uniform'+str(nActions)+'_episilon_'+str(episilon))
+    plot_function(res,n_episodes,'Q_Learning_uniform'+str(nActions)+'_episilon_'+str(episilon)+'_gamma_'+str(gamma))
     
     for i, row in enumerate(a_optimals):
         print (row)
@@ -238,6 +244,7 @@ def main():
     
     n_episodes = 170
     alpha = 0.5
+    gamma = 1
     
     #undiscounted, gamma = 1
     #reward = -1 unless it reaches the goal
@@ -247,26 +254,22 @@ def main():
     # final policy representation
     '''task a: results of sarsa & q-learning'''
     episilon = 0.1
-    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon)
+    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
     print
-    q_learning(n_episodes,alpha,nActions,actionSpace,episilon)
+    q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
     print
     '''Part 2''
         '' do off-policy TD learning using uniform policy on non-king's move'''
-    print 'uniform policy' #this algorithm is extremely slow cuz it assigns the same prob to each action
-    q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon)
+    #print 'uniform policy' #this algorithm is extremely slow cuz it assigns the same prob to each action
+    #q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
     print
     
     '''task b: king's moves are available'''
     actionSpace = {1:(0,-1),2:(-1,-1),3:(-1,0),4:(-1,1),5:(0,1),6:(1,1),7:(1,0),8:(1,-1)}
     nActions = 8
-    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon)
+    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon,gamma)
     print
-    q_learning(n_episodes,alpha,nActions,actionSpace,episilon)
-
-
-
-
+    q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
 
 
 
