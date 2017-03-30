@@ -1,4 +1,5 @@
 #problem: find a fair oil leasing price over three years
+# MDP, DP solution
 
 import numpy as np
 def solve(k): #k_states
