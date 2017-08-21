@@ -150,6 +150,7 @@ def q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
         a_optimals = createEmptyCanvas()
         #nsteps = 0
         i,j = start
+        print "episode: ", epi
         #for each step of episode
         while i!=g_i or j!= g_j:
             #find the next move a from current position (episilon-greedy)
@@ -174,8 +175,14 @@ def q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
             i,j =next_i,next_j
             #nsteps+=1
             last+=1
+
+            print
+
         #last+=nsteps
         res.append(last)
+
+        for i, row in enumerate(a_optimals):
+            print (row)
     
     plot_function(res,n_episodes,'Q_Learning_'+str(nActions)+'_episilon_'+str(episilon)+'_gamma_'+str(gamma))
     
@@ -199,7 +206,8 @@ def q_learning_uniform(n_episodes,alpha,nActions,actionSpace,episilon, gamma):
         a_optimals = createEmptyCanvas()
         #nsteps = 0
         i,j = start
-        print epi
+        
+        print
         #for each step of episode
         while i!=g_i or j!= g_j:
             #find the next move a from current position (episilon-greedy)
@@ -254,7 +262,7 @@ def main():
     # final policy representation
     '''task a: results of sarsa & q-learning'''
     episilon = 0.1
-    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
+    #Sarsa(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
     print
     q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
     print
@@ -267,9 +275,9 @@ def main():
     '''task b: king's moves are available'''
     actionSpace = {1:(0,-1),2:(-1,-1),3:(-1,0),4:(-1,1),5:(0,1),6:(1,1),7:(1,0),8:(1,-1)}
     nActions = 8
-    Sarsa(n_episodes,alpha,nActions,actionSpace,episilon,gamma)
+    #Sarsa(n_episodes,alpha,nActions,actionSpace,episilon,gamma)
     print
-    q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
+    #q_learning(n_episodes,alpha,nActions,actionSpace,episilon, gamma)
 
 
 
